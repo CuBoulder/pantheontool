@@ -1,0 +1,83 @@
+#!/usr/bin/env python3
+
+import argparse
+import subprocess
+import json
+import datetime
+import os
+
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--create-site", help="Deploy a new site")
+parser.add_argument("--get-backup-info", help="Fetch information about a site's backups")
+args = parser.parse_args()
+
+
+if args.create_site:
+
+  sitename = args.create_site
+  orgname = 'university-of-colorado-boulder'
+
+  print('Checking if site already exists...')
+  print('Cleaning local workspace...')
+  subprocess.run('rm -rf ' + sitename, shell=True)
+
+  print('Removing existing site...')
+  subprocess.run('terminus site:delete ' + sitename + ' --yes', shell=True)
+
+  print('Creating empty site on Pantheon...')
+  subprocess.run('terminus site:create ' + sitename + ' ' + sitename + ' empty --org=' + orgname, shell=True)
+
+  print('Cloning initial filesystem...')
+  subprocess.run('git clone git@github.com:CuBoulder/d8_composer_base.git ' + sitename, shell=True)
+
+  print('Repointing repository...')
+  giturl = subprocess.run('terminus connection:info ' + sitename + '.dev --field=git_url', capture_output=True, shell=True).stdout.decode('utf-8')
+  subprocess.run('cd ' + sitename + ' && git remote set-url origin ' + giturl, shell=True)
+
+  print('Composer update...')
+  subprocess.run('cd ' + sitename + ' && composer update', shell=True)
+
+  print('Composer install...')
+  subprocess.run('cd ' + sitename + ' && composer install', shell=True)
+
+  print('Cleaning nested .git directories...')
+  subprocess.run('cd ' + sitename + ' && shopt -s globstar && rm -rf web/**/.git', shell=True)
+
+  print('Setting site to .git mode...')
+  subprocess.run('cd ' + sitename + ' && terminus connection:set ' + sitename + '.dev git', shell=True)
+
+  print('Initial Pantheon git commit...')
+  subprocess.run('cd ' + sitename + ' && git add -A && git commit -m "Drupal 8 and dependencies" && yes | git push --force', shell=True)
+
+  print('Waiting for deployment...')
+  subprocess.run('sleep 60', shell=True)
+
+  print('Installing Drupal...')
+  subprocess.run('terminus drush ' + sitename + '.dev -- site-install ucbstandard -y', shell=True)
+  subprocess.run('terminus drush ' + sitename + '.dev -- uli', shell=True)
+
+  print('Done!')
+
+
+if (args.get_backup_info):
+  result = subprocess.run(['terminus', 'backup:list', args.get_backup_info, '--format=json'], capture_output=True)
+  backupinfo = json.loads(result.stdout)
+  for b in backupinfo:
+    parts = backupinfo[b]['file'].split("_")
+    site = parts[0]
+    env = parts[1]
+    timestamp = parts[2]
+    tz = parts[3]
+    type = parts[4].split('.')[0]
+    print("Site: " + site + ", Env: " + env + ", Type: " + type + ", Timestamp: " + timestamp)
+    # print(backupinfo[b]['file'].split("_")[0])
+    # print(backupinfo[b]['file'].split("_")[1])
+    # print(backupinfo[b]['file'].split("_")[2])
+    # print(backupinfo[b]['file'].split("_")[3])
+    # print(backupinfo[b]['file'].split("_")[4].split('.')[0])
+
+
+
+
