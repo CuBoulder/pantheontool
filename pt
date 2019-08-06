@@ -58,6 +58,9 @@ if args.create_site:
   subprocess.run('terminus drush ' + sitename + '.dev -- site-install ucbstandard -y', shell=True)
   subprocess.run('terminus drush ' + sitename + '.dev -- uli', shell=True)
 
+  print('Removing local workspace...')
+  subprocess.run('rm -rf ' + sitename, shell=True)
+
   print('Done!')
 
 
