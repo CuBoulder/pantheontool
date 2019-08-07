@@ -16,25 +16,25 @@ parser.add_argument("--get-backup-info", help="Fetch information about a site's 
 args = parser.parse_args()
 
 
+def list_sites():
+  print("Fetching site list...")
 
-if args.list_sites:
-    print("Fetching site list...")
+  sitelist = json.loads(
+    subprocess.run("terminus site:list --format=json", shell=True, capture_output=True).stdout.decode('utf-8'))
+  for key in sitelist:
+    site = sitelist[key]
+    if site['framework'] != 'drupal8':
+      continue
+    print(site['name'])
 
-    sitelist = json.loads(subprocess.run("terminus site:list --format=json", shell=True,capture_output=True).stdout.decode('utf-8'))
-    for key in sitelist:
-      site = sitelist[key]
-      if site['framework'] != 'drupal8':
-        continue
-      print(site['name'])
 
-if args.delete_site:
+def delete_site(arg1):
   print("Deleting site...")
-  subprocess.run("terminus site:delete " + args.delete_site, shell=True)
+  subprocess.run("terminus site:delete " + arg1, shell=True)
 
 
-if args.create_site:
-
-  sitename = args.create_site
+def create_site(arg1):
+  sitename = arg1
 
 
   print('Checking if site already exists...')
@@ -81,8 +81,7 @@ if args.create_site:
 
   print('Done!')
 
-
-if (args.get_backup_info):
+def get_backup_info(arg1):
   result = subprocess.run(['terminus', 'backup:list', args.get_backup_info, '--format=json'], capture_output=True)
   backupinfo = json.loads(result.stdout)
   for b in backupinfo:
@@ -98,6 +97,18 @@ if (args.get_backup_info):
     # print(backupinfo[b]['file'].split("_")[2])
     # print(backupinfo[b]['file'].split("_")[3])
     # print(backupinfo[b]['file'].split("_")[4].split('.')[0])
+
+if args.list_sites:
+  list_sites()
+
+if args.delete_site:
+  delete_site(args.delete_site)
+
+if args.create_site:
+  create_site(args.create_site)
+
+if (args.get_backup_info):
+  get_backup_info(args.get_backup_info)
 
 
 
