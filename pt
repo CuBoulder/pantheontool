@@ -14,6 +14,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--create-site", help="Deploy a new site", nargs='+')
 parser.add_argument("--delete-site", help="Delete an existing site")
 parser.add_argument("--list-sites", help="List existing sites", action='store_true')
+parser.add_argument("--drush", help="Execute a drush command against a site", nargs='+')
 parser.add_argument("--get-backup-info", help="Fetch information about a site's backups")
 parser.add_argument("--parallel", help="Execute operations in parallel", action='store_true')
 args = parser.parse_args()
@@ -105,6 +106,10 @@ def get_backup_info(arg1):
     # print(backupinfo[b]['file'].split("_")[3])
     # print(backupinfo[b]['file'].split("_")[4].split('.')[0])
 
+def execute_drush(envname, command):
+  subprocess.run('terminus remote:drush ' + envname + ' ' + command, shell=True)
+
+
 if args.list_sites:
   list_sites()
 
@@ -125,6 +130,8 @@ if args.create_site:
 if (args.get_backup_info):
   get_backup_info(args.get_backup_info)
 
+if args.drush:
+  execute_drush(args.drush[0], args.drush[1])
 
 
 
