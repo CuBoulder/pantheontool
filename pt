@@ -68,7 +68,7 @@ def create_site(arg1):
   subprocess.run('cd ' + sitename + ' && composer install', shell=True)
 
   print('Cleaning nested .git directories...')
-  subprocess.run('cd ' + sitename + ' && shopt -s globstar && rm -rf web/**/.git', shell=True)
+  subprocess.run('cd ' + sitename + ' && shopt -s globstar && rm -rf web/**/.git', shell=True, executable='/bin/bash')
 
   print('Setting site to .git mode...')
   subprocess.run('cd ' + sitename + ' && terminus connection:set ' + sitename + '.dev git', shell=True)
