@@ -51,6 +51,7 @@ def create_site(arg1):
 
   print('Creating empty site on Pantheon...')
   subprocess.run('terminus site:create ' + sitename + ' ' + sitename + ' empty --org=' + orgname, shell=True)
+  #subprocess.run('terminus site:create ' + sitename + ' ' + sitename + ' empty', shell=True)
 
   print('Cloning initial filesystem...')
   subprocess.run('git clone git@github.com:CuBoulder/d8_composer_base.git ' + sitename, shell=True)
@@ -59,11 +60,15 @@ def create_site(arg1):
   print('terminus connection:info ' + sitename + '.dev --field=git_url')
   giturl = subprocess.run('terminus connection:info ' + sitename + '.dev --field=git_url', capture_output=True, shell=True).stdout.decode('utf-8')
   print(giturl)
+
+
   print('cd ' + sitename + ' && git remote set-url origin ' + giturl)
   subprocess.run('cd ' + sitename + ' && git remote set-url origin ' + giturl, shell=True)
 
   print('Composer update...')
   subprocess.run('cd ' + sitename + ' && composer update', shell=True)
+
+
 
   print('Composer install...')
   subprocess.run('cd ' + sitename + ' && composer install', shell=True)
@@ -72,20 +77,26 @@ def create_site(arg1):
   subprocess.run('cd ' + sitename + ' && shopt -s globstar && rm -rf web/**/.git', shell=True, executable='/bin/bash')
 
   print('Setting site to .git mode...')
-  subprocess.run('cd ' + sitename + ' && terminus connection:set ' + sitename + '.dev git', shell=True)
+  subprocess.run('cd ' + sitename + ' && terminus connection:set ' + sitename + '.dev git', shell=True, executable='/bin/bash')
+
+  print('Initial Pantheon git add...')
+  subprocess.run('cd ' + sitename + ' && git add -A', shell=True, executable='/bin/bash')
 
   print('Initial Pantheon git commit...')
-  subprocess.run('cd ' + sitename + ' && git add -A && git commit -m "Drupal 8 and dependencies" && yes | git push --force', shell=True)
+  subprocess.run('cd ' + sitename + ' && git commit -m "Drupal 8 and dependencies"', shell=True, executable='/bin/bash')
+
+  print('Initial Pantheon git push...')
+  subprocess.run('cd ' + sitename + ' && yes | git push --force', shell=True, executable='/bin/bash')
 
   print('Waiting for deployment...')
   subprocess.run('sleep 60', shell=True)
 
   print('Installing Drupal...')
   subprocess.run('terminus drush ' + sitename + '.dev -- site-install ucbstandard -y', shell=True)
-  subprocess.run('terminus drush ' + sitename + '.dev -- uli', shell=True)
+  #subprocess.run('terminus drush ' + sitename + '.dev -- uli', shell=True)
 
   print('Removing local workspace...')
-  subprocess.run('rm -rf ' + sitename, shell=True)
+  #subprocess.run('rm -rf ' + sitename, shell=True)
 
   print('Done!')
 
