@@ -75,6 +75,7 @@ def create_site(arg1):
 
   print('Cleaning nested .git directories...')
   subprocess.run('cd ' + sitename + ' && shopt -s globstar && rm -rf web/**/.git', shell=True, executable='/bin/bash')
+  subprocess.run('cd ' + sitename + ' && shopt -s globstar && rm -rf vendor/**/.git', shell=True, executable='/bin/bash')
 
   print('Setting site to .git mode...')
   subprocess.run('cd ' + sitename + ' && terminus connection:set ' + sitename + '.dev git', shell=True, executable='/bin/bash')
@@ -89,14 +90,27 @@ def create_site(arg1):
   subprocess.run('cd ' + sitename + ' && yes | git push --force', shell=True, executable='/bin/bash')
 
   print('Waiting for deployment...')
-  subprocess.run('sleep 60', shell=True)
+  subprocess.run('sleep 90', shell=True)
+
+  print('Switch to SFTP mode...')
+  subprocess.run('cd ' + sitename + ' && terminus connection:set ' + sitename + '.dev sftp', shell=True, executable='/bin/bash')
 
   print('Installing Drupal...')
+
   subprocess.run('terminus drush ' + sitename + '.dev -- site-install ucbstandard -y', shell=True)
   #subprocess.run('terminus drush ' + sitename + '.dev -- uli', shell=True)
 
+  print('Commit changes...')
+  subprocess.run('terminus env:commit ' + sitename + '.dev', shell=True, executable='/bin/bash')
+
+  subprocess.run('sleep 5', shell=True)
+
+  print('Switch to Git mode...')
+  subprocess.run('terminus connection:set ' + sitename + '.dev git', shell=True, executable='/bin/bash')
+
+
   print('Removing local workspace...')
-  #subprocess.run('rm -rf ' + sitename, shell=True)
+  subprocess.run('rm -rf ' + sitename, shell=True)
 
   print('Done!')
 
